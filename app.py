@@ -2,6 +2,7 @@ from src.loader import load_pdf
 from src.chunker import chunk_text
 from src.embeddings import EmbeddingModel
 from src.vector_store import VectorStore
+from src.rag_pipeline import RAGPipeline
 
 
 PDF_PATH = "data/sample.pdf"
@@ -29,12 +30,14 @@ for i, chunk in enumerate(chunks[:3]):
     print(chunk)
     print()
 
+
+
 store = VectorStore(dimension=384)
 store.add_embeddings(embeddings)
 
-query = "What is self attention?"
+query = "Why is self-attention better than RNNs?"
 query_embedding = embedder.encode_chunks([query])[0]
-distances, indices = store.search(query_embedding)
+distances, indices = store.search(query_embedding, k=5)
 
 print("\nQuestion:")
 print(query)
@@ -49,3 +52,12 @@ for i, idx in enumerate(indices):
     print()
     print(chunks[idx][:500])
     print()
+
+retrieved_chunks = [chunks[idx] for idx in indices]
+rag = RAGPipeline()
+answer = rag.generate_answer(query, retrieved_chunks)
+
+print("\n" + "=" * 60)
+print("Answer")
+print("=" * 60)
+print(answer)
